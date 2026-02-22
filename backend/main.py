@@ -4,8 +4,9 @@ Novraux Backend — FastAPI entry point.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from db.database import create_tables
-from routers import trends, seo, orders, research
+from routers import trends, seo, orders, research, calendar
 from routers import shopify as shopify_router
+from routers import vault as vault_router
 
 app = FastAPI(
     title="Novraux API",
@@ -40,4 +41,6 @@ app.include_router(trends.router)
 app.include_router(seo.router)
 app.include_router(orders.router)
 app.include_router(research.router)
+app.include_router(calendar.router)
 app.include_router(shopify_router.router)
+app.include_router(vault_router.router)

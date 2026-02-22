@@ -1,7 +1,10 @@
 from typing import List, Dict, Any
+import asyncio
 from services.research.competitor_analysis import analyze_etsy_competitors, analyze_redbubble_competitors
 from services.ai.gap_analyzer import generate_market_gap_report
+from services.ai.groq_client import client, GROQ_FAST_MODEL
 import statistics
+import json
 
 class NicheValidator:
     """
@@ -49,10 +52,9 @@ class NicheValidator:
         # We pass a subset of top listings to the AI to keep context manageable
         report = generate_market_gap_report(keyword, all_listings[:15])
         
-        # 4. Calculate Opportunity Score (Initial logic)
+        # 4. Calculate Opportunity Score using AI
         # Higher score if many competitors but AI finds clear gaps
-        # Lower score if no one is selling (risk) or everyone is selling exactly the same
-        opportunity_score = self._calculate_opportunity_score(len(all_listings), report)
+        opportunity_score = await self._calculate_ai_opportunity_score(keyword, len(all_listings), report)
         
         return {
             "success": True,
@@ -68,21 +70,45 @@ class NicheValidator:
             "top_competitors": all_listings[:6] # Return few for UI cards
         }
 
-    def _calculate_opportunity_score(self, count: int, report: str) -> int:
+    async def _calculate_ai_opportunity_score(self, keyword: str, count: int, report: str) -> int:
         """
-        Basic scoring algorithm based on competition volume and AI sentiment.
+        Uses Tier 1 Groq to evaluate the niche potential based on volume and gap analysis.
         """
-        score = 50 # Start neutral
+        if not client:
+            return 50
+
+        prompt = f"""
+        Evaluate the "POD Opportunity Score" (0-100) for the niche: "{keyword}"
         
-        # Volume factor
-        if count < 5: score -= 10 # Too low (unproven)
-        elif count > 50: score -= 15 # Too high (saturated)
-        else: score += 10 # Healthy competition (sweet spot)
+        DATA:
+        - Competitor Count: {count}
+        - Market Gap Report: {report}
         
-        # AI Sentiment factor (mocked logic for now, could be enhanced by parsing report)
-        if "gap" in report.lower() or "unique" in report.lower():
-            score += 20
+        SCORING RULES:
+        - 80-100: "Goldmine" - High demand, clear underserved gap.
+        - 60-79: "High Opportunity" - Healthy competition, strong entry logic.
+        - 40-59: "Moderate" - Crowded but possible with high effort.
+        - 0-39: "Saturated" or "Unproven" - High risk or zero demand.
         
-        return min(max(score, 0), 100)
+        Return ONLY a JSON object: {{"score": <int>, "logic": "<one short sentence>"}}
+        """
+
+        try:
+            # Run in executor because client is synchronous
+            loop = asyncio.get_event_loop()
+            completion = await loop.run_in_executor(
+                None, 
+                lambda: client.chat.completions.create(
+                    model=GROQ_FAST_MODEL,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.3,
+                    response_format={"type": "json_object"}
+                )
+            )
+            data = json.loads(completion.choices[0].message.content)
+            return int(data.get("score", 50))
+        except Exception as e:
+            print(f"[Niche Validator] AI Scoring Error: {e}")
+            return 50
 
 niche_validator = NicheValidator()

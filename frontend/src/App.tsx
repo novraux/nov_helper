@@ -3,10 +3,12 @@ import { TrendFeed } from './pages/TrendFeed';
 import { ShopifySEO } from './pages/ShopifySEO';
 import { Orders } from './pages/Orders';
 import { NicheExplorer } from './pages/NicheExplorer';
+import { DesignVault } from './pages/DesignVault';
+import { SeasonalCalendar } from './pages/SeasonalCalendar';
 import './index.css';
 import styles from './App.module.css';
 
-type Page = 'trends' | 'seo' | 'orders' | 'explorer';
+type Page = 'trends' | 'seo' | 'orders' | 'explorer' | 'vault' | 'calendar';
 
 function App() {
   const [page, setPage] = useState<Page>('explorer');
@@ -54,6 +56,23 @@ function App() {
             <span className={styles.navIcon}>📦</span>
             Orders
           </button>
+          <button
+            className={`${styles.navItem} ${page === 'vault' ? styles.active : ''}`}
+            onClick={() => setPage('vault')}
+            id="nav-vault"
+          >
+            <span className={styles.navIcon}>🗂</span>
+            Design Vault
+          </button>
+
+          <button
+            className={`${styles.navItem} ${page === 'calendar' ? styles.active : ''}`}
+            onClick={() => setPage('calendar')}
+            id="nav-calendar"
+          >
+            <span className={styles.navIcon}>📅</span>
+            Seasonal Calendar
+          </button>
         </nav>
 
         <div className={styles.sidebarFooter}>
@@ -70,6 +89,15 @@ function App() {
         }} />}
         {page === 'seo' && <ShopifySEO />}
         {page === 'orders' && <Orders />}
+        {page === 'vault' && <DesignVault />}
+        {page === 'calendar' && (
+          <SeasonalCalendar
+            onNavigateToExplorer={(kw) => {
+              setExplorerKeyword(kw);
+              setPage('explorer');
+            }}
+          />
+        )}
       </main>
     </div>
   );

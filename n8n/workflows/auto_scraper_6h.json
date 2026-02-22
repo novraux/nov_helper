@@ -1,0 +1,120 @@
+{
+  "name": "Novraux — Auto Trend Scraper (Every 6h)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "cron-6h",
+      "name": "Every 6 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/trends/scrape-batch",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "http-scrape",
+      "name": "Run Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "value2": "success"
+            }
+          ]
+        }
+      },
+      "id": "if-success",
+      "name": "Check Success",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/vault/stats",
+        "options": {}
+      },
+      "id": "fetch-vault-stats",
+      "name": "Fetch Vault Stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [960, 220]
+    },
+    {
+      "parameters": {
+        "jsCode": "const scrape = $('Run Scraper').item.json;\nconst vault  = $('Fetch Vault Stats').item.json;\n\nconst lines = [\n  `🤖 Novraux Auto-Scraper Report`,\n  `🕐 ${new Date().toISOString().slice(0,16)} UTC`,\n  ``,\n  `📊 Scraper Results:`,\n  `  • New keywords:   ${scrape.new_keywords}`,\n  `  • Rescored:       ${scrape.scored}`,\n  `  • Cache hits:     ${scrape.cached}`,\n  `  • Blocked:        ${scrape.blocked}`,\n  `  • Duration:       ${scrape.duration_seconds}s`,\n  ``,\n  `🏆 Top Trends (score ≥7):`,\n  ...(scrape.top_trends || []).map(t => `  • [${t.score}/10] ${t.keyword} (${t.source})`),\n  ``,\n  `🗂 Vault: ${vault.total} designs (draft: ${vault.by_status?.draft || 0}, ready: ${vault.by_status?.ready || 0})`,\n];\n\nreturn [{ json: { report: lines.join('\\n'), scrape, vault } }];"
+      },
+      "id": "build-report",
+      "name": "Build Digest Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 220]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log to n8n execution log\nconsole.log($json.report);\nreturn $input.all();"
+      },
+      "id": "log-report",
+      "name": "Log Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1440, 220]
+    },
+    {
+      "parameters": {
+        "jsCode": "const err = $('Run Scraper').item.json;\nconsole.error('Scrape FAILED:', err.error);\nreturn [{ json: { alert: 'Scrape failed', error: err.error } }];"
+      },
+      "id": "handle-error",
+      "name": "Handle Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 400]
+    }
+  ],
+  "connections": {
+    "Every 6 Hours": {
+      "main": [[ { "node": "Run Scraper", "type": "main", "index": 0 } ]]
+    },
+    "Run Scraper": {
+      "main": [[ { "node": "Check Success", "type": "main", "index": 0 } ]]
+    },
+    "Check Success": {
+      "main": [
+        [ { "node": "Fetch Vault Stats", "type": "main", "index": 0 } ],
+        [ { "node": "Handle Error", "type": "main", "index": 0 } ]
+      ]
+    },
+    "Fetch Vault Stats": {
+      "main": [[ { "node": "Build Digest Report", "type": "main", "index": 0 } ]]
+    },
+    "Build Digest Report": {
+      "main": [[ { "node": "Log Report", "type": "main", "index": 0 } ]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["novraux", "automation", "trends"],
+  "staticData": null
+}

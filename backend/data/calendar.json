@@ -1,0 +1,153 @@
+[
+    {
+        "id": "valentines",
+        "name": "Valentine's Day",
+        "emoji": "💝",
+        "date": "02-14",
+        "category": "Holiday",
+        "niches": [
+            "love quote shirt",
+            "valentines couples",
+            "funny anti valentines",
+            "galentines day"
+        ],
+        "leadDays": 21,
+        "color": "pink",
+        "notes": "Huge POD day. Humor & couples do well."
+    },
+    {
+        "id": "st-patricks",
+        "name": "St. Patrick's Day",
+        "emoji": "🍀",
+        "date": "03-17",
+        "category": "Holiday",
+        "niches": [
+            "lucky shirt clover",
+            "irish pride tee",
+            "funny st patricks",
+            "drink beer clover"
+        ],
+        "leadDays": 14,
+        "color": "green"
+    },
+    {
+        "id": "easter",
+        "name": "Easter",
+        "emoji": "🐰",
+        "date": "04-20",
+        "category": "Holiday",
+        "niches": [
+            "easter bunny kids",
+            "christian easter tees",
+            "funny egg hunt",
+            "floral spring designs"
+        ],
+        "leadDays": 18,
+        "color": "purple"
+    },
+    {
+        "id": "mothers-day",
+        "name": "Mother's Day",
+        "emoji": "🌸",
+        "date": "05-11",
+        "category": "Holiday",
+        "niches": [
+            "best mom ever",
+            "new mom gift",
+            "grandma flowers",
+            "personalized mom jewelry"
+        ],
+        "leadDays": 25,
+        "color": "pink"
+    },
+    {
+        "id": "fathers-day",
+        "name": "Father's Day",
+        "emoji": "👨",
+        "date": "06-15",
+        "category": "Holiday",
+        "niches": [
+            "fishing dad",
+            "funny dad jokes",
+            "gadget dad",
+            "first fathers day"
+        ],
+        "leadDays": 21,
+        "color": "blue"
+    },
+    {
+        "id": "graduation",
+        "name": "Graduation Season",
+        "emoji": "🎓",
+        "date": "05-20",
+        "category": "Life Event",
+        "niches": [
+            "class of 2026",
+            "proud mom of grad",
+            "inspirational grad quotes"
+        ],
+        "leadDays": 30,
+        "color": "gold"
+    },
+    {
+        "id": "back-to-school",
+        "name": "Back to School",
+        "emoji": "🍎",
+        "date": "08-15",
+        "category": "Seasonal",
+        "niches": [
+            "kindergarten vibes",
+            "teacher mode",
+            "personalized backpacks",
+            "retro school designs"
+        ],
+        "leadDays": 45,
+        "color": "red"
+    },
+    {
+        "id": "halloween",
+        "name": "Halloween",
+        "emoji": "🎃",
+        "date": "10-31",
+        "category": "Holiday",
+        "niches": [
+            "spooky vibes",
+            "witchy aesthetic",
+            "retro halloween",
+            "kids costume tees"
+        ],
+        "leadDays": 35,
+        "color": "orange"
+    },
+    {
+        "id": "thanksgiving",
+        "name": "Thanksgiving",
+        "emoji": "🦃",
+        "date": "11-27",
+        "category": "Holiday",
+        "niches": [
+            "thankful mama",
+            "funny turkey day",
+            "friendsgiving",
+            "autumn leaf patterns"
+        ],
+        "leadDays": 20,
+        "color": "brown"
+    },
+    {
+        "id": "christmas",
+        "name": "Christmas",
+        "emoji": "🎄",
+        "date": "12-25",
+        "category": "Holiday",
+        "niches": [
+            "ugly sweater style",
+            "matching family pjs",
+            "christian christmas",
+            "retro santa"
+        ],
+        "leadDays": 50,
+        "color": "green",
+        "notes": "Q4 Peak. Start designs in September."
+    }
+]

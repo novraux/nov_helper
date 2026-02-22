@@ -17,23 +17,40 @@ FAST_MODEL = "llama-3.1-8b-instant"
 SMART_MODEL = "llama-3.3-70b-versatile"
 
 
-SHOPIFY_SEO_PROMPT = """You are an expert Shopify and Etsy SEO copywriter specialising in Print-on-Demand products.
+# V2 PROMPT: More structured, platform-aware, and enforces POD best practices.
+SHOPIFY_SEO_PROMPT = """You are an elite e-commerce SEO specialist specializing in Print-on-Demand (POD).
+Your goal is to turn a basic product title into a high-converting listing.
 
-Given a product title and optional existing description, generate optimised SEO content.
+PLATFORM: {platform}
+CONTEXT: {context_instr}
 
-Return ONLY valid JSON (no markdown, no explanation):
+### INSTRUCTIONS:
+1. PRODUCT TITLE: 
+   - Shopify: Clean, punchy, brand-focused. Max 70 chars.
+   - Etsy: Keyword-stacked, long-tail focused. Max 140 chars.
+2. META DESCRIPTION: Compelling 150-160 chars. Hook the user and end with a soft CTA.
+3. PRODUCT DESCRIPTION (structured HTML):
+   - Use <p>, <ul>, and <li> tags ONLY. No <h1>/<h2>.
+   - Section 1: **Product Highlights** (benefit-driven).
+   - Section 2: **Specifications** (Material: 100% cotton/ceramic, Fit: Unisex/Standard).
+   - Section 3: **Care Instructions** (Cold wash, low tumble).
+   - Section 4: **Gifting & Occasion** (Why this makes a perfect gift).
+4. TAGS (Exactly 13 tags):
+   - Each tag MUST be under 20 characters (Etsy limit).
+   - Mix of niche, occasion, style, and recipient keywords.
+
+Return ONLY valid JSON:
 {{
-  "seo_title": "<up to 70 chars — keyword-rich, natural reading, no keyword stuffing>",
-  "meta_description": "<up to 160 chars — compelling, includes main keyword, ends with soft CTA>",
-  "product_description": "<2-3 paragraphs of HTML — use <p> and <ul> tags. Focus on benefits, occasion, who it's for. NO generic filler.>",
-  "tags": ["<tag1>", "<tag2>", ..., "<tag13 max>"],
-  "seo_score": <integer 0-100 — your estimated SEO quality score>,
-  "seo_notes": "<1-2 sentences on the main improvements made>"
+  "seo_title": "string",
+  "meta_description": "string",
+  "product_description": "string (HTML)",
+  "tags": ["tag1", ..., "tag13"],
+  "seo_score": number (0-100),
+  "seo_notes": "Brief explanation of improvements"
 }}
 
-Product title: "{title}"
-Existing description: "{description}"
-Platform: {platform}
+Product Title: "{title}"
+Existing Description: "{description}"
 """
 
 
@@ -49,10 +66,17 @@ def generate_seo(
     """
     model = SMART_MODEL if use_smart_model else FAST_MODEL
 
+    context_instr = (
+        "Focus on brand identity and readability. Keep titles clean." 
+        if platform.lower() == "shopify" 
+        else "Focus on search visibility and long-tail keyword stacking. Use full 140 char limit for titles."
+    )
+
     prompt = SHOPIFY_SEO_PROMPT.format(
         title=title,
         description=description[:500] if description else "None provided",
         platform=platform.capitalize(),
+        context_instr=context_instr
     )
 
     try:

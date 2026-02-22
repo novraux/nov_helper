@@ -1,0 +1,503 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    background: #0d0e12;
+    color: #f0f0f0;
+    font-family: 'Inter', sans-serif;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.header {
+    padding: 24px 28px 0;
+    flex-shrink: 0;
+}
+
+.headerTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.titleBlock h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0 0 4px;
+    background: linear-gradient(135deg, #fb923c, #f472b6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.titleBlock p {
+    font-size: 0.82rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* ── Filter row ──────────────────────────────────────────── */
+.filterRow {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    align-items: center;
+}
+
+.filterBtn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    color: #9ca3af;
+    font-size: 0.75rem;
+    padding: 5px 14px;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-weight: 500;
+}
+
+.filterBtn:hover {
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #e5e7eb;
+}
+
+.filterBtnActive {
+    background: rgba(251, 146, 60, 0.15);
+    border-color: rgba(251, 146, 60, 0.4);
+    color: #fb923c;
+}
+
+.searchInput {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    color: #d1d5db;
+    font-size: 0.78rem;
+    padding: 6px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    min-width: 180px;
+    margin-left: auto;
+}
+
+.searchInput:focus {
+    border-color: #fb923c;
+}
+
+.searchInput::placeholder {
+    color: #4b5563;
+}
+
+/* ── Urgency strip ────────────────────────────────────────── */
+.urgencyStrip {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.urgencyPill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+.urgencyRed {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.25);
+    color: #f87171;
+}
+
+.urgencyOrange {
+    background: rgba(251, 146, 60, 0.12);
+    border-color: rgba(251, 146, 60, 0.25);
+    color: #fb923c;
+}
+
+.urgencyYellow {
+    background: rgba(234, 179, 8, 0.1);
+    border-color: rgba(234, 179, 8, 0.2);
+    color: #fbbf24;
+}
+
+.urgencyGreen {
+    background: rgba(52, 211, 153, 0.08);
+    border-color: rgba(52, 211, 153, 0.15);
+    color: #34d399;
+}
+
+/* ── Scroll body ─────────────────────────────────────────── */
+.body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 28px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+/* ── Month section ───────────────────────────────────────── */
+.monthSection {}
+
+.monthLabel {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #4b5563;
+    font-weight: 700;
+    margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.monthLabel::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* ── Event card ──────────────────────────────────────────── */
+.eventGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 12px;
+}
+
+.eventCard {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.2s, transform 0.18s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.eventCard:hover {
+    border-color: rgba(255, 255, 255, 0.14);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* Urgency left border accent */
+.eventCard::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 14px 0 0 14px;
+}
+
+.accentRed {
+    --accent: #ef4444;
+}
+
+.accentRed::before {
+    background: #ef4444;
+}
+
+.accentOrange {
+    --accent: #fb923c;
+}
+
+.accentOrange::before {
+    background: #fb923c;
+}
+
+.accentYellow {
+    --accent: #f59e0b;
+}
+
+.accentYellow::before {
+    background: #f59e0b;
+}
+
+.accentGreen {
+    --accent: #34d399;
+}
+
+.accentGreen::before {
+    background: #34d399;
+}
+
+.accentBlue {
+    --accent: #60a5fa;
+}
+
+.accentBlue::before {
+    background: #60a5fa;
+}
+
+.accentPurple {
+    --accent: #a78bfa;
+}
+
+.accentPurple::before {
+    background: #a78bfa;
+}
+
+.accentPink {
+    --accent: #f472b6;
+}
+
+.accentPink::before {
+    background: #f472b6;
+}
+
+/* Card header row */
+.cardHeader {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.eventEmoji {
+    font-size: 1.8rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.eventMeta {
+    flex: 1;
+    min-width: 0;
+}
+
+.eventName {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #e5e7eb;
+    margin: 0 0 2px;
+}
+
+.eventDate {
+    font-size: 0.72rem;
+    color: #6b7280;
+}
+
+.daysChip {
+    flex-shrink: 0;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    align-self: flex-start;
+}
+
+.chipRed {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.chipOrange {
+    background: rgba(251, 146, 60, 0.15);
+    color: #fb923c;
+    border: 1px solid rgba(251, 146, 60, 0.25);
+}
+
+.chipYellow {
+    background: rgba(234, 179, 8, 0.12);
+    color: #fbbf24;
+    border: 1px solid rgba(234, 179, 8, 0.2);
+}
+
+.chipGreen {
+    background: rgba(52, 211, 153, 0.1);
+    color: #34d399;
+    border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+/* Niche pills */
+.nichePills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.nichePill {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    padding: 2px 9px;
+    font-size: 0.68rem;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: all 0.18s;
+}
+
+.nichePill:hover {
+    background: rgba(251, 146, 60, 0.12);
+    border-color: rgba(251, 146, 60, 0.3);
+    color: #fb923c;
+}
+
+/* Lead time info */
+.leadTime {
+    font-size: 0.72rem;
+    color: #4b5563;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Action row */
+.cardActions {
+    display: flex;
+    gap: 6px;
+}
+
+.btnPrimary {
+    flex: 1;
+    background: rgba(251, 146, 60, 0.14);
+    border: 1px solid rgba(251, 146, 60, 0.35);
+    color: #fb923c;
+    border-radius: 7px;
+    padding: 7px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.btnPrimary:hover {
+    background: rgba(251, 146, 60, 0.25);
+}
+
+.btnSecondary {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #6b7280;
+    border-radius: 7px;
+    padding: 7px 12px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.18s;
+}
+
+.btnSecondary:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #e5e7eb;
+}
+
+/* ── Empty state ─────────────────────────────────────────── */
+.empty {
+    text-align: center;
+    padding: 64px 24px;
+    color: #4b5563;
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.emptyIcon {
+    font-size: 2.5rem;
+    opacity: 0.4;
+}
+
+/* ── Toast ───────────────────────────────────────────────── */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #1a1b21;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-size: 0.82rem;
+    color: #d1d5db;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    z-index: 9999;
+    animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.loadingOverlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 50;
+    pointer-events: none;
+    padding: 100px 28px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    background: #0d0e12;
+}
+
+.skeletonStrip {
+    height: 36px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 999px;
+    position: relative;
+    overflow: hidden;
+}
+
+.skeletonGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 12px;
+}
+
+.skeletonCard {
+    height: 200px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 14px;
+    position: relative;
+    overflow: hidden;
+}
+
+.skeletonCard::after, .skeletonStrip::after {
+    content: "";
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.04), transparent);
+    animation: shimmer 1.8s infinite;
+}
+
+@keyframes shimmer {
+    100% { transform: translateX(100%); }
+}

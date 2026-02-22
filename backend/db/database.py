@@ -19,5 +19,5 @@ def get_db():
 
 
 def create_tables():
-    from db.models import Trend, Listing, Order  # noqa: F401
+    from db.models import Trend, Listing, Order, SavedDesign  # noqa: F401
     Base.metadata.create_all(bind=engine)

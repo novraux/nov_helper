@@ -99,5 +99,77 @@ export const api = {
         });
         if (!res.ok) throw new Error('Failed to explore niche');
         return res.json();
-    }
+    },
+
+    getCalendar: async () => {
+        const res = await fetch(`${API_BASE}/research/calendar`);
+        if (!res.ok) throw new Error('Failed to fetch calendar');
+        return res.json();
+    },
+
+    // ── Design Vault ────────────────────────────────────────────────────────
+    getVaultDesigns: async (filters?: { niche?: string; status?: string; style?: string }) => {
+        const q = new URLSearchParams();
+        if (filters?.niche) q.set('niche', filters.niche);
+        if (filters?.status) q.set('status', filters.status);
+        if (filters?.style) q.set('style', filters.style);
+        const res = await fetch(`${API_BASE}/vault?${q}`);
+        if (!res.ok) throw new Error('Failed to fetch vault');
+        return res.json();
+    },
+
+    getVaultStats: async () => {
+        const res = await fetch(`${API_BASE}/vault/stats`);
+        if (!res.ok) throw new Error('Failed to fetch vault stats');
+        return res.json();
+    },
+
+    saveDesign: async (design: {
+        niche: string;
+        title: string;
+        concept?: string;
+        design_text?: string;
+        product_type?: string;
+        style_preference?: string;
+        demand_score?: number;
+        elements?: string[];
+        mockup_url?: string;
+    }) => {
+        const res = await fetch(`${API_BASE}/vault`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(design),
+        });
+        if (!res.ok) throw new Error('Failed to save design');
+        return res.json();
+    },
+
+    updateDesignStatus: async (id: number, status: 'draft' | 'ready' | 'exported') => {
+        const res = await fetch(`${API_BASE}/vault/${id}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status }),
+        });
+        if (!res.ok) throw new Error('Failed to update design status');
+        return res.json();
+    },
+
+    updateDesignListing: async (id: number, listing: {
+        listing_title?: string;
+        listing_description?: string;
+        listing_tags?: string[];
+    }) => {
+        const res = await fetch(`${API_BASE}/vault/${id}/listing`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(listing),
+        });
+        if (!res.ok) throw new Error('Failed to update design listing');
+        return res.json();
+    },
+
+    deleteDesign: async (id: number) => {
+        const res = await fetch(`${API_BASE}/vault/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed to delete design');
+    },
 };

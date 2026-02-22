@@ -1,0 +1,176 @@
+{
+    "name": "Novraux — Daily Opportunity Digest (9am UTC)",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "cronExpression",
+                            "expression": "0 9 * * *"
+                        }
+                    ]
+                }
+            },
+            "id": "cron-9am",
+            "name": "Every Day at 9am",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.1,
+            "position": [
+                240,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "method": "GET",
+                "url": "http://backend:8000/trends?min_score=7&limit=10",
+                "options": {}
+            },
+            "id": "fetch-top-trends",
+            "name": "Fetch Top 10 Trends",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                480,
+                220
+            ]
+        },
+        {
+            "parameters": {
+                "method": "GET",
+                "url": "http://backend:8000/vault?status=ready",
+                "options": {}
+            },
+            "id": "fetch-ready-designs",
+            "name": "Fetch Ready Designs",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                480,
+                400
+            ]
+        },
+        {
+            "parameters": {
+                "method": "GET",
+                "url": "http://backend:8000/vault/stats",
+                "options": {}
+            },
+            "id": "fetch-vault-stats",
+            "name": "Fetch Vault Stats",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                480,
+                560
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const trends  = $('Fetch Top 10 Trends').all().map(i => i.json);\nconst designs = $('Fetch Ready Designs').all().map(i => i.json);\nconst vault   = $('Fetch Vault Stats').first().json;\n\nconst today = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });\n\nconst trendLines = trends.map((t, i) =>\n  `  ${i+1}. [${t.score_groq}/10] ${t.keyword} (${t.source}) ${t.urgency ? '⚡' + t.urgency : ''}`\n).join('\\n');\n\nconst designLines = designs.slice(0,5).map(d =>\n  `  • ${d.title} — ${d.niche} (${d.product_type || 'POD'})`\n).join('\\n');\n\nconst digest = [\n  `═══════════════════════════════════════`,\n  `📊 NOVRAUX DAILY DIGEST — ${today}`,\n  `═══════════════════════════════════════`,\n  ``,\n  `🔥 TOP OPPORTUNITIES (Score ≥7):`,\n  trendLines || '  None yet — run scraper first',\n  ``,\n  `✅ DESIGNS READY TO EXPORT (${designs.length}):`,\n  designLines || '  No designs ready yet',\n  ``,\n  `🗂 VAULT SUMMARY:`,\n  `  Total designs: ${vault.total || 0}`,\n  `  Draft:         ${vault.by_status?.draft || 0}`,\n  `  Ready:         ${vault.by_status?.ready || 0}`,\n  `  Exported:      ${vault.by_status?.exported || 0}`,\n  ``,\n  `═══════════════════════════════════════`,\n  `▶ Open dashboard: http://localhost:5174`,\n  `═══════════════════════════════════════`,\n].join('\\n');\n\nconsole.log(digest);\nreturn [{ json: { digest, trend_count: trends.length, design_count: designs.length } }];"
+            },
+            "id": "build-digest",
+            "name": "Build Daily Digest",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                780,
+                380
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "// Summary node: emit structured summary for downstream webhooks / notifications\nconst d = $json;\nreturn [{\n  json: {\n    sent_at: new Date().toISOString(),\n    digest: d.digest,\n    stats: {\n      top_trends:  d.trend_count,\n      ready_designs: d.design_count\n    }\n  }\n}];"
+            },
+            "id": "emit-summary",
+            "name": "Emit Summary",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1020,
+                380
+            ]
+        }
+    ],
+    "connections": {
+        "Every Day at 9am": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Top 10 Trends",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Fetch Ready Designs",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Fetch Vault Stats",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Top 10 Trends": {
+            "main": [
+                [
+                    {
+                        "node": "Build Daily Digest",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Ready Designs": {
+            "main": [
+                [
+                    {
+                        "node": "Build Daily Digest",
+                        "type": "main",
+                        "index": 1
+                    }
+                ]
+            ]
+        },
+        "Fetch Vault Stats": {
+            "main": [
+                [
+                    {
+                        "node": "Build Daily Digest",
+                        "type": "main",
+                        "index": 2
+                    }
+                ]
+            ]
+        },
+        "Build Daily Digest": {
+            "main": [
+                [
+                    {
+                        "node": "Emit Summary",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "tags": [
+        "novraux",
+        "automation",
+        "digest"
+    ],
+    "staticData": null
+}

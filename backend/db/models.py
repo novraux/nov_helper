@@ -94,3 +94,35 @@ class Order(Base):
     profit: Mapped[float] = mapped_column(Float, default=0.0)
     status: Mapped[str] = mapped_column(String(50), default="pending")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class SavedDesign(Base):
+    __tablename__ = "saved_designs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+
+    # Core design info
+    niche: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    concept: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    design_text: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    product_type: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # t-shirt, mug, hoodie...
+    style_preference: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # Text-Only / Graphic / Balanced
+
+    # AI scoring
+    demand_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)  # 1-10
+    elements: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)  # design elements list
+
+    # Generated assets
+    mockup_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # DALL-E image URL
+
+    # SEO listing copy (generated on demand)
+    listing_title: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    listing_description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    listing_tags: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
+
+    # Workflow status
+    status: Mapped[str] = mapped_column(String(30), default="draft")  # draft / ready / exported
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

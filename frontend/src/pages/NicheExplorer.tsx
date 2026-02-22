@@ -122,6 +122,8 @@ export function NicheExplorer({ initialKeyword }: Props) {
 
     const [error, setError] = useState<string | null>(null);
     const [view, setView] = useState<'search' | 'designs' | 'design-detail'>('search');
+    const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+    const [saveToast, setSaveToast] = useState('');
 
     // Auto-search if coming from Trend Feed or URL
     useEffect(() => {
@@ -260,6 +262,55 @@ export function NicheExplorer({ initialKeyword }: Props) {
         }
     };
 
+    const showSaveToast = (msg: string) => {
+        setSaveToast(msg);
+        setTimeout(() => setSaveToast(''), 2500);
+    };
+
+    const handleSaveToVault = async (design: DesignIdea, e: React.MouseEvent) => {
+        e.stopPropagation();
+        const key = `${podAnalysis?.niche}::${design.title}`;
+        if (savedIds.has(key)) return;
+        try {
+            await api.saveDesign({
+                niche: podAnalysis?.niche || keyword,
+                title: design.title,
+                concept: design.concept,
+                design_text: design.design_text,
+                product_type: design.product,
+                style_preference: stylePref,
+                demand_score: design.demand_score,
+                elements: design.elements,
+            });
+            setSavedIds(prev => new Set([...prev, key]));
+            showSaveToast(`"${design.title}" saved to Vault ✓`);
+        } catch {
+            showSaveToast('Failed to save — is backend running?');
+        }
+    };
+
+    const handleSaveCurrentToVault = async () => {
+        if (!selectedDesign || !podAnalysis) return;
+        const key = `${podAnalysis.niche}::${selectedDesign.title}`;
+        try {
+            await api.saveDesign({
+                niche: podAnalysis.niche,
+                title: selectedDesign.title,
+                concept: selectedDesign.concept,
+                design_text: selectedDesign.design_text,
+                product_type: selectedDesign.product,
+                style_preference: stylePref,
+                demand_score: selectedDesign.demand_score,
+                elements: selectedDesign.elements,
+                mockup_url: mockupImage?.success ? mockupImage.image_url : undefined,
+            });
+            setSavedIds(prev => new Set([...prev, key]));
+            showSaveToast(`"${selectedDesign.title}" saved to Vault ✓`);
+        } catch {
+            showSaveToast('Failed to save — is backend running?');
+        }
+    };
+
     const handleExportDesign = () => {
         if (!selectedDesign || !designBrief || !listingCopy) {
             setError('Design details not loaded');
@@ -313,7 +364,7 @@ export function NicheExplorer({ initialKeyword }: Props) {
                     {loading && (
                         <div className={styles.loadingArea}>
                             <div className={styles.spinner}></div>
-                            <p>Scraping Etsy & Redbubble... Running AI Analysis...</p>
+                            <p className={styles.loadingText}>Scraping Etsy & Redbubble... Running AI Analysis...</p>
                         </div>
                     )}
 
@@ -330,18 +381,18 @@ export function NicheExplorer({ initialKeyword }: Props) {
                                 <div className={styles.scoreCard}>
                                     <div className={styles.scoreCircle}>
                                         <span className={styles.scoreValue}>{result.opportunity_score}</span>
-                                        <span className={styles.scoreLabel}>Vibe Score</span>
+                                        <span className={styles.scoreLabel}>AI Opportunity Score</span>
                                     </div>
                                     <div className={styles.scoreStatus}>
-                                        {result.opportunity_score > 70 ? '✅ High Opportunity' :
-                                            result.opportunity_score > 40 ? '⚠️ Moderate Potential' : '❌ Risky / Saturated'}
+                                        {result.opportunity_score > 70 ? '💎 High Opportunity' :
+                                            result.opportunity_score > 40 ? '⚡ Moderate Potential' : '🔥 Risky / Saturated'}
                                     </div>
                                 </div>
 
                                 <div className={styles.marketStats}>
                                     <div className={styles.statItem}>
                                         <span className={styles.statLabel}>Found Listings</span>
-                                        <span className={styles.statValue}>{result.listing_count}</span>
+                                        <span className={styles.statValue}>{result.listing_count.toLocaleString()}</span>
                                         <span className={styles.statSub}>
                                             {result.platforms ? `Etsy (${result.platforms.etsy}) + RB (${result.platforms.redbubble})` : 'Cross-platform'}
                                         </span>
@@ -356,31 +407,30 @@ export function NicheExplorer({ initialKeyword }: Props) {
                                 </div>
                             </div>
 
-                            <div className={styles.reportSection}>
-                                <h2 className={styles.sectionTitle}>📊 Market Analysis</h2>
+                            <section className={styles.reportSection}>
+                                <h2 className={styles.sectionTitle}>
+                                    <span style={{ marginRight: '12px' }}>📊</span>
+                                    Market Opportunity Analysis
+                                </h2>
                                 <div className={styles.reportContent}>
                                     <ReactMarkdown>{result.market_gap_report}</ReactMarkdown>
                                 </div>
-                            </div>
+                            </section>
 
-                            <div style={{ margin: '20px 0', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
-                                <h3>🎨 Style Options & Generation</h3>
-                                <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>Customize the visual style before generating ideas.</p>
+                            <div className={styles.optionsContainer} style={{ animationDelay: '0.2s' }}>
+                                <div className={styles.sectionHeader}>
+                                    <div>
+                                        <h3 className={styles.sectionTitle} style={{ marginBottom: '4px' }}>🎨 Style Options & Generation</h3>
+                                        <p className={styles.description}>Customize the visual style before generating ideas.</p>
+                                    </div>
+                                </div>
 
-                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                                <div className={styles.stylePills}>
                                     {['Text-Only', 'Minimalist', 'Graphic-Heavy', 'Vintage Retro', 'Balanced'].map(style => (
                                         <button
                                             key={style}
                                             onClick={() => setStylePref(style)}
-                                            style={{
-                                                padding: '8px 16px',
-                                                border: `1px solid ${stylePref === style ? 'var(--accent-primary)' : 'var(--border-color)'}`,
-                                                background: stylePref === style ? 'rgba(99, 102, 241, 0.1)' : 'white',
-                                                color: stylePref === style ? 'var(--accent-primary)' : 'var(--text-primary)',
-                                                borderRadius: '20px',
-                                                cursor: 'pointer',
-                                                fontWeight: stylePref === style ? '600' : 'normal'
-                                            }}
+                                            className={`${styles.stylePill} ${stylePref === style ? styles.stylePillActive : ''}`}
                                         >
                                             {style}
                                         </button>
@@ -447,6 +497,7 @@ export function NicheExplorer({ initialKeyword }: Props) {
                                     key={i}
                                     className={styles.designCard}
                                     onClick={() => handleSelectDesign(design)}
+                                    style={{ animationDelay: `${i * 0.1}s` } as any}
                                 >
                                     <div className={styles.designHeader}>
                                         <span className={styles.demandBadge}>Demand: {design.demand_score}/10</span>
@@ -465,9 +516,18 @@ export function NicheExplorer({ initialKeyword }: Props) {
                                     <p className={styles.designText}>
                                         <strong>Design Text:</strong> "{design.design_text}"
                                     </p>
-                                    <button className={styles.selectButton}>
-                                        View Details & Generate Copy →
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
+                                        <button className={styles.selectButton} style={{ flex: 1 }}>
+                                            View Details & Listing →
+                                        </button>
+                                        <button
+                                            id={`save-vault-${i}`}
+                                            onClick={(e) => handleSaveToVault(design, e)}
+                                            className={`${styles.saveButton} ${savedIds.has(`${podAnalysis.niche}::${design.title}`) ? styles.saveButtonSaved : styles.saveButtonDraft}`}
+                                        >
+                                            {savedIds.has(`${podAnalysis.niche}::${design.title}`) ? '✓ Saved' : '🗂 Save'}
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -666,6 +726,14 @@ export function NicheExplorer({ initialKeyword }: Props) {
                         {/* EXPORT BUTTON */}
                         <div className={styles.actionButtons}>
                             <button
+                                id="save-current-vault"
+                                onClick={handleSaveCurrentToVault}
+                                className={`${styles.saveButton} ${savedIds.has(`${podAnalysis.niche}::${selectedDesign.title}`) ? styles.saveButtonSaved : styles.saveButtonDraft}`}
+                                style={{ padding: '12px 24px', fontSize: '0.9rem' }}
+                            >
+                                {savedIds.has(`${podAnalysis.niche}::${selectedDesign.title}`) ? '✓ Saved to Vault' : '🗂 Save to Vault'}
+                            </button>
+                            <button
                                 className={styles.exportButton}
                                 onClick={handleExportDesign}
                                 disabled={!designBrief || !listingCopy}
@@ -675,6 +743,13 @@ export function NicheExplorer({ initialKeyword }: Props) {
                             <p className={styles.hint}>Download all design details to your computer, then upload to Printful</p>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Save toast */}
+            {saveToast && (
+                <div className={styles.toast}>
+                    🗂 {saveToast}
                 </div>
             )}
         </div>

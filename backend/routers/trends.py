@@ -391,3 +391,125 @@ def delete_all_trends(db: Session = Depends(get_db)):
     db.commit()
     print(f"[Trends Router] Deleted {count} trends for fresh scrape")
     return {"deleted": count}
+
+
+@router.post("/scrape-batch")
+async def trigger_scrape_batch(db: Session = Depends(get_db)):
+    """
+    Non-streaming batch scrape endpoint designed for n8n scheduled calls.
+    Runs the full scraper pipeline and returns a JSON summary.
+    Safe for HTTP nodes (no SSE), ideal for cron triggers.
+    """
+    from datetime import datetime
+    import asyncio
+
+    loop = asyncio.get_event_loop()
+    started_at = datetime.utcnow()
+
+    try:
+        # Run all scrapers concurrently
+        scrapers = [
+            loop.run_in_executor(None, scrape_google_trends_enhanced),
+            loop.run_in_executor(None, get_all_tiktok_trends),
+            loop.run_in_executor(None, get_all_pinterest_trends),
+            loop.run_in_executor(None, scrape_redbubble_popular_tags),
+        ]
+        results = await asyncio.gather(*scrapers, return_exceptions=True)
+
+        google_data    = results[0] if not isinstance(results[0], Exception) else []
+        tiktok_kws     = results[1] if not isinstance(results[1], Exception) else []
+        pinterest_kws  = results[2] if not isinstance(results[2], Exception) else []
+        redbubble_kws  = results[3] if not isinstance(results[3], Exception) else []
+
+        all_kw_data = list(google_data)
+        for kw in tiktok_kws:    all_kw_data.append({"keyword": kw, "source": "tiktok"})
+        for kw in pinterest_kws:  all_kw_data.append({"keyword": kw, "source": "pinterest"})
+        for kw in redbubble_kws:  all_kw_data.append({"keyword": kw, "source": "redbubble"})
+
+        # Filter blacklisted + deduplicate
+        keywords_only = [item["keyword"] for item in all_kw_data]
+        clean_keywords, blocked = filter_blacklisted_keywords(keywords_only)
+        all_kw_data = [item for item in all_kw_data if item["keyword"] in clean_keywords]
+
+        scored_count = 0
+        cached_count = 0
+        new_count = 0
+        total_cost = 0.0
+        top_trends = []
+
+        for kw_data in all_kw_data[:30]:
+            keyword = kw_data["keyword"]
+            existing = db.query(Trend).filter(Trend.keyword == keyword).first()
+
+            if existing:
+                existing.last_scraped_at = datetime.utcnow()
+                existing.scrape_count = (existing.scrape_count or 0) + 1
+                if existing.created_at:
+                    existing.days_trending = (datetime.utcnow() - existing.created_at).days
+
+                if should_rescore(existing):
+                    res = await loop.run_in_executor(None, score_trend, existing.keyword)
+                    if res:
+                        existing.score_groq        = res.get("score")
+                        existing.pod_viability     = res.get("pod_viability")
+                        existing.competition_level = res.get("competition_level")
+                        existing.ip_safe           = res.get("ip_safe")
+                        existing.product_suggestions = res.get("product_suggestions", [])
+                        existing.score_reasoning   = res.get("reasoning")
+                        existing.last_scored_at    = datetime.utcnow()
+                        scored_count += 1
+                else:
+                    cached_count += 1
+            else:
+                new_trend = Trend(
+                    keyword=keyword,
+                    source=kw_data.get("source", "unknown"),
+                    last_scraped_at=datetime.utcnow(),
+                    scrape_count=1,
+                )
+                db.add(new_trend)
+                db.flush()
+
+                res = await loop.run_in_executor(None, score_trend, keyword)
+                if res:
+                    new_trend.score_groq        = res.get("score")
+                    new_trend.pod_viability     = res.get("pod_viability")
+                    new_trend.competition_level = res.get("competition_level")
+                    new_trend.ip_safe           = res.get("ip_safe")
+                    new_trend.product_suggestions = res.get("product_suggestions", [])
+                    new_trend.score_reasoning   = res.get("reasoning")
+                    new_trend.last_scored_at    = datetime.utcnow()
+                    scored_count += 1
+                    new_count += 1
+
+        db.commit()
+
+        # Fetch top 5 for digest summary
+        top = (
+            db.query(Trend)
+            .filter(Trend.score_groq >= 7)
+            .order_by(Trend.score_groq.desc())
+            .limit(5)
+            .all()
+        )
+        top_trends = [{"keyword": t.keyword, "score": t.score_groq, "source": t.source} for t in top]
+
+        duration_s = (datetime.utcnow() - started_at).total_seconds()
+
+        return {
+            "status": "success",
+            "run_at": started_at.isoformat(),
+            "duration_seconds": round(duration_s, 1),
+            "scraped_total":   len(all_kw_data),
+            "new_keywords":    new_count,
+            "scored":          scored_count,
+            "cached":          cached_count,
+            "blocked":         len(blocked),
+            "total_api_cost":  round(total_cost, 4),
+            "top_trends":      top_trends,
+        }
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"status": "error", "error": str(e), "run_at": started_at.isoformat()}
