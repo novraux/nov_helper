@@ -123,6 +123,13 @@ export function TrendFeed({ onNavigate }: Props) {
                 <div className={styles.actions}>
                     <button
                         className={styles.secondaryBtn}
+                        onClick={fetchTrends}
+                        disabled={loading}
+                    >
+                        {loading ? '⏳ Loading...' : '🔄 Refresh Data'}
+                    </button>
+                    <button
+                        className={styles.secondaryBtn}
                         onClick={() => setShowCostDashboard(!showCostDashboard)}
                     >
                         {showCostDashboard ? '📊 Hide Stats' : '💰 Cost Stats'}
@@ -133,7 +140,7 @@ export function TrendFeed({ onNavigate }: Props) {
                         disabled={scraping}
                         id="scrape-btn"
                     >
-                        {scraping ? 'Scraping in progress...' : '⟳ Run Scraper'}
+                        {scraping ? 'Scraping in progress...' : '🚀 Run Scraper'}
                     </button>
                 </div>
             </div>
