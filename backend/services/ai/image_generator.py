@@ -38,43 +38,57 @@ class ImageGenerator:
         """
         print(f"[Image Generator] Creating {style_preference} mockup for: {design_title} ({product_type})")
         
-        # Adjust prompt based on style preference
+        # Style-specific direction
         style_guidance = ""
         if "Text-Only" in style_preference or "Typography" in style_preference:
-            style_guidance = "The design MUST consist ONLY of beautiful typography and text. NO illustrations, NO complex graphics, NO characters. Just the text styled professionally."
+            style_guidance = "STYLE: Pure typography composition. NO illustrations, NO icons, NO clipart. The text IS the entire design, styled with beautiful lettering."
         elif "Graphic-Heavy" in style_preference or "Illustration" in style_preference:
-            style_guidance = "The design MUST be heavily illustrated with high-quality graphics and minimal, well-integrated text."
-        elif "Vintage" in style_preference:
-            style_guidance = "The design MUST have a vintage, retro aesthetic with distressed textures and classic retro colors."
-        
-        # Create a detailed prompt for DALL-E
-        prompt = f"""Professional product mockup design for POD e-commerce.
-        
-Design Theme: {niche}
-Product Type: {product_type}
-Design Title: {design_title}
-Design Concept: {design_concept}
-Text on Design: "{design_text}"
-Style Preference: {style_preference}
+            style_guidance = "STYLE: Richly illustrated design with the text seamlessly integrated into the artwork."
+        elif "Vintage" in style_preference or "Retro" in style_preference:
+            style_guidance = "STYLE: Vintage retro aesthetic. Distressed badge shape, worn textures, classic Americana color palette (cream, burgundy, navy)."
+        elif "Minimalist" in style_preference:
+            style_guidance = "STYLE: Ultra-clean minimalist design. Maximum white space, single accent color, simple geometric forms."
+        else:
+            style_guidance = "STYLE: Balanced design combining clean typography with tasteful supporting graphic elements."
 
+        # ── TEXT-FIRST PROMPT STRUCTURE ────────────────────────────────────────
+        # DALL-E achieves best text accuracy when:
+        # 1. The exact text string appears at the very TOP of the prompt
+        # 2. It is wrapped in angle brackets < > which signal verbatim rendering
+        # 3. It is written in ALL CAPS in the instruction
+        # 4. It is re-affirmed at the bottom of the prompt
+        # ────────────────────────────────────────────────────────────────────────
+        prompt = f"""TEXT TO RENDER VERBATIM: <{design_text.upper()}>
+
+This is a flat print-on-demand graphic design artwork on a pure white background.
+
+━━━ DESIGN SPECIFICATION ━━━
+Niche / Theme: {niche}
+Design Title: {design_title}
+Visual Concept: {design_concept}
 {style_guidance}
 
-Create a professional, market-ready mockup image showing this design on a {product_type}.
-- High quality, realistic lighting
-- Professional product photography style
-- Clear view of the design/text on the product
-- Suitable for Etsy/e-commerce listing
-- Clean background
-- Modern, appealing aesthetic
+━━━ LAYOUT ━━━
+- Center the design in the frame.
+- The primary wording in the design is the following text, spelled EXACTLY letter-for-letter: "{design_text}"
+- Do not add any extra words, do not alter, abbreviate, or paraphrase the text.
+- Render all characters in the text with precise letterforms.
 
-The design should visually represent: {design_concept}"""
+━━━ TECHNICAL PRINTFUL REQUIREMENTS ━━━
+- Output: a single flat vector-style graphic design (NOT a product mockup).
+- Background: solid pure white (#FFFFFF). NO gradients, shadows, or patterns in the background.
+- NO t-shirts, mugs, frames, hangers, models, or lifestyle photography.
+- High-contrast colors for DTG/screen printing. Scalable, clean linework.
+- Single unified design — NO collage, NO grid, NO multiple panels.
+
+FINAL CHECK — the exact text in the design must read: "{design_text}" (copy this exactly, character by character)."""
 
         try:
             response = _get_openai_client().images.generate(
                 model="dall-e-3",
                 prompt=prompt,
                 size="1024x1024",
-                quality="standard",
+                quality="hd",
                 n=1,
             )
             
