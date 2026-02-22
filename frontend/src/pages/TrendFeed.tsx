@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Trend } from '../types';
 import { TrendCard } from '../components/TrendCard';
+import { CostDashboard } from '../components/CostDashboard';
 import { api } from '../api';
 import styles from './TrendFeed.module.css';
 
 type FilterScore = 'all' | '7+' | '4+';
 type FilterIP = 'all' | 'safe';
 type FilterSource = 'all' | 'google' | 'tiktok' | 'pinterest' | 'redbubble' | 'etsy';
+type FilterVelocity = 'all' | 'rising' | 'stable' | 'declining';
+type FilterUrgency = 'all' | 'urgent' | 'plan_ahead' | 'evergreen';
 
 export function TrendFeed() {
     const [trends, setTrends] = useState<Trend[]>([]);
@@ -19,6 +22,9 @@ export function TrendFeed() {
     const [filterIP, setFilterIP] = useState<FilterIP>('all');
     const [filterSource, setFilterSource] = useState<FilterSource>('all');
     const [filterComp, setFilterComp] = useState<string>('all');
+    const [filterVelocity, setFilterVelocity] = useState<FilterVelocity>('all');
+    const [filterUrgency, setFilterUrgency] = useState<FilterUrgency>('all');
+    const [filterMinInterest, setFilterMinInterest] = useState<number>(0);
     const [search, setSearch] = useState('');
 
     const fetchTrends = useCallback(async () => {
@@ -92,10 +98,14 @@ export function TrendFeed() {
     const filtered = trends.filter((t) => {
         const matchSearch = !search || t.keyword.toLowerCase().includes(search.toLowerCase());
         const matchComp = filterComp === 'all' || t.competition_level === filterComp;
-        return matchSearch && matchComp;
+        const matchVelocity = filterVelocity === 'all' || t.trend_velocity === filterVelocity;
+        const matchUrgency = filterUrgency === 'all' || t.urgency === filterUrgency;
+        const matchInterest = t.avg_interest === null || t.avg_interest === undefined || t.avg_interest >= filterMinInterest;
+        return matchSearch && matchComp && matchVelocity && matchUrgency && matchInterest;
     });
 
     const highScore = filtered.filter((t) => (t.score_groq ?? 0) >= 7).length;
+    const [showCostDashboard, setShowCostDashboard] = useState(false);
 
     return (
         <div className={styles.page}>
@@ -106,15 +116,25 @@ export function TrendFeed() {
                         {trends.length} trends tracked · <span className={styles.highlight}>{highScore} high-value</span>
                     </p>
                 </div>
-                <button
-                    className={styles.scrapeBtn}
-                    onClick={handleScrape}
-                    disabled={scraping}
-                    id="scrape-btn"
-                >
-                    {scraping ? 'Scraping in progress...' : '⟳ Run Scraper'}
-                </button>
+                <div className={styles.actions}>
+                    <button
+                        className={styles.secondaryBtn}
+                        onClick={() => setShowCostDashboard(!showCostDashboard)}
+                    >
+                        {showCostDashboard ? '📊 Hide Stats' : '💰 Cost Stats'}
+                    </button>
+                    <button
+                        className={styles.scrapeBtn}
+                        onClick={handleScrape}
+                        disabled={scraping}
+                        id="scrape-btn"
+                    >
+                        {scraping ? 'Scraping in progress...' : '⟳ Run Scraper'}
+                    </button>
+                </div>
             </div>
+
+            {showCostDashboard && <CostDashboard trends={trends} />}
 
             {scraping && (
                 <div className={styles.progressContainer}>
@@ -188,6 +208,45 @@ export function TrendFeed() {
                             onClick={() => setFilterComp(v)}
                         >
                             {v}
+                        </button>
+                    ))}
+                </div>
+
+                <div className={styles.filterGroup}>
+                    <span className={styles.filterLabel}>Momentum</span>
+                    {(['all', 'rising', 'stable', 'declining'] as FilterVelocity[]).map((v) => (
+                        <button
+                            key={v}
+                            className={`${styles.pill} ${filterVelocity === v ? styles.active : ''}`}
+                            onClick={() => setFilterVelocity(v)}
+                        >
+                            {v === 'rising' ? '🚀 Rising' : v === 'declining' ? '📉 Declining' : v === 'stable' ? '📊 Stable' : 'All'}
+                        </button>
+                    ))}
+                </div>
+
+                <div className={styles.filterGroup}>
+                    <span className={styles.filterLabel}>Urgency</span>
+                    {(['all', 'urgent', 'plan_ahead', 'evergreen'] as FilterUrgency[]).map((v) => (
+                        <button
+                            key={v}
+                            className={`${styles.pill} ${filterUrgency === v ? styles.active : ''}`}
+                            onClick={() => setFilterUrgency(v)}
+                        >
+                            {v === 'urgent' ? '⚡ Urgent' : v === 'plan_ahead' ? '📅 Plan' : v === 'evergreen' ? '♻️ Evergreen' : 'All'}
+                        </button>
+                    ))}
+                </div>
+
+                <div className={styles.filterGroup}>
+                    <span className={styles.filterLabel}>Interest</span>
+                    {[0, 30, 50, 70].map((v) => (
+                        <button
+                            key={v}
+                            className={`${styles.pill} ${filterMinInterest === v ? styles.active : ''}`}
+                            onClick={() => setFilterMinInterest(v)}
+                        >
+                            {v === 0 ? 'All' : `${v}+`}
                         </button>
                     ))}
                 </div>

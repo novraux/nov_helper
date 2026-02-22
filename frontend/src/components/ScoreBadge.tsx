@@ -44,3 +44,98 @@ export function IPBadge({ ipSafe }: IPBadgeProps) {
         </span>
     );
 }
+
+// === Enhanced Badges (Phase 1) ===
+
+interface MomentumBadgeProps {
+    velocity: 'rising' | 'stable' | 'declining' | null;
+}
+
+export function MomentumBadge({ velocity }: MomentumBadgeProps) {
+    if (!velocity) return null;
+
+    const config = {
+        rising: { emoji: '🚀', label: 'Rising', className: styles.green },
+        stable: { emoji: '📊', label: 'Stable', className: styles.blue },
+        declining: { emoji: '📉', label: 'Declining', className: styles.red },
+    };
+
+    const { emoji, label, className } = config[velocity];
+
+    return (
+        <span className={`${styles.badge} ${className}`}>
+            {emoji} {label}
+        </span>
+    );
+}
+
+interface UrgencyBadgeProps {
+    urgency: 'urgent' | 'plan_ahead' | 'evergreen' | 'standard' | null;
+}
+
+export function UrgencyBadge({ urgency }: UrgencyBadgeProps) {
+    if (!urgency || urgency === 'standard') return null;
+
+    const config = {
+        urgent: { emoji: '⚡', label: 'Urgent', className: styles.orange },
+        plan_ahead: { emoji: '📅', label: 'Plan Ahead', className: styles.yellow },
+        evergreen: { emoji: '♻️', label: 'Evergreen', className: styles.purple },
+        standard: { emoji: '', label: '', className: '' },
+    };
+
+    const { emoji, label, className } = config[urgency];
+
+    return (
+        <span className={`${styles.badge} ${className}`}>
+            {emoji} {label}
+        </span>
+    );
+}
+
+interface InterestBadgeProps {
+    interest: number | null;
+}
+
+export function InterestBadge({ interest }: InterestBadgeProps) {
+    if (interest === null || interest === undefined) return null;
+
+    const className =
+        interest >= 70 ? styles.green :
+        interest >= 50 ? styles.blue :
+        interest >= 30 ? styles.yellow : styles.red;
+
+    return (
+        <span className={`${styles.badge} ${className}`}>
+            📊 Interest: {interest}
+        </span>
+    );
+}
+
+interface CostBadgeProps {
+    cost: number;
+    cached?: boolean;
+}
+
+export function CostBadge({ cost, cached }: CostBadgeProps) {
+    if (cached) {
+        return (
+            <span className={`${styles.badge} ${styles.green}`}>
+                💰 Cached
+            </span>
+        );
+    }
+
+    if (cost === 0) {
+        return (
+            <span className={`${styles.badge} ${styles.blue}`}>
+                FREE
+            </span>
+        );
+    }
+
+    return (
+        <span className={`${styles.badge} ${styles.gray}`}>
+            💸 ${cost.toFixed(3)}
+        </span>
+    );
+}
