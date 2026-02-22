@@ -37,7 +37,17 @@ export function TrendCard({ trend, onGenerateDesign }: Props) {
         new Date(trend.last_scraped_at) > new Date(trend.last_scored_at));
 
     return (
-        <div className={styles.card} onClick={() => setExpanded(!expanded)}>
+        <div
+            className={styles.card}
+            onClick={() => {
+                if (onGenerateDesign) {
+                    onGenerateDesign();
+                } else {
+                    setExpanded(!expanded);
+                }
+            }}
+            style={{ cursor: onGenerateDesign ? 'pointer' : 'default' }}
+        >
             <div className={styles.header}>
                 <div className={styles.left}>
                     <div className={styles.titleRow}>
@@ -113,32 +123,6 @@ export function TrendCard({ trend, onGenerateDesign }: Props) {
                         <p className={styles.rawanalysis}>{trend.deep_analysis}</p>
                     )}
 
-                    {onGenerateDesign && (
-                        <div style={{ marginTop: '16px' }}>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onGenerateDesign();
-                                }}
-                                style={{
-                                    width: '100%',
-                                    padding: '12px',
-                                    background: 'var(--accent-primary)',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '6px',
-                                    fontWeight: 'bold',
-                                    cursor: 'pointer',
-                                    fontSize: '1rem',
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    gap: '8px'
-                                }}
-                            >
-                                🎨 Generate Custom AI Designs
-                            </button>
-                        </div>
-                    )}
                 </div>
             )}
 

@@ -381,3 +381,13 @@ def get_trend(trend_id: int, db: Session = Depends(get_db)):
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Trend not found")
     return trend
+
+
+@router.delete("/all")
+def delete_all_trends(db: Session = Depends(get_db)):
+    """Delete all trends from the database. Used before a fresh scrape."""
+    count = db.query(Trend).count()
+    db.query(Trend).delete()
+    db.commit()
+    print(f"[Trends Router] Deleted {count} trends for fresh scrape")
+    return {"deleted": count}

@@ -62,7 +62,7 @@ export function TrendFeed({ onNavigate }: Props) {
         setError(null);
 
         const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-        const eventSource = new EventSource(`${API_BASE} /trends/scrape`);
+        const eventSource = new EventSource(`${API_BASE}/trends/scrape`);
 
         eventSource.addEventListener('progress', (e) => {
             try {
@@ -99,6 +99,26 @@ export function TrendFeed({ onNavigate }: Props) {
         });
     };
 
+    const handleRefreshAndRescrape = async () => {
+        if (scraping || loading) return;
+        setError(null);
+        setLoading(true);
+        setScrapeStatus('Clearing old trends...');
+        try {
+            const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+            await fetch(`${API_BASE}/trends/all`, { method: 'DELETE' });
+            setTrends([]);
+        } catch (e) {
+            setError('Failed to clear trends before re-scraping.');
+            setLoading(false);
+            return;
+        } finally {
+            setLoading(false);
+        }
+        // Now kick off a fresh cost-efficient scrape
+        handleScrape();
+    };
+
     const filtered = trends.filter((t) => {
         const matchSearch = !search || t.keyword.toLowerCase().includes(search.toLowerCase());
         const matchComp = filterComp === 'all' || t.competition_level === filterComp;
@@ -123,10 +143,10 @@ export function TrendFeed({ onNavigate }: Props) {
                 <div className={styles.actions}>
                     <button
                         className={styles.secondaryBtn}
-                        onClick={fetchTrends}
-                        disabled={loading}
+                        onClick={handleRefreshAndRescrape}
+                        disabled={loading || scraping}
                     >
-                        {loading ? '⏳ Loading...' : '🔄 Refresh Data'}
+                        {loading ? '🗑️ Clearing...' : scraping ? '⏳ Scraping...' : '🔄 Refresh & Rescrape'}
                     </button>
                     <button
                         className={styles.secondaryBtn}
