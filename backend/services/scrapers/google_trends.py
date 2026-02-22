@@ -76,6 +76,54 @@ def get_related_queries(keywords: list[str], timeframe: str = "now 7-d", geo: st
     return unique
 
 
+def get_interest_over_time(keyword: str, timeframe: str = "today 3-m") -> dict | None:
+    """
+    Get detailed interest metrics for a keyword.
+    Returns: {avg_interest, interest_peak, current_interest, trend_direction}
+    """
+    try:
+        pytrends = TrendReq(hl="en-US", tz=0, timeout=(10, 25), retries=2, backoff_factor=0.5)
+        pytrends.build_payload([keyword], timeframe=timeframe, geo="")
+
+        interest_df = pytrends.interest_over_time()
+
+        if interest_df.empty or keyword not in interest_df.columns:
+            return None
+
+        values = interest_df[keyword].tolist()
+
+        # Calculate metrics
+        avg = sum(values) / len(values) if values else 0
+        peak = max(values) if values else 0
+        current = values[-1] if values else 0
+
+        # Determine trend direction (compare recent vs older)
+        if len(values) >= 4:
+            recent_avg = sum(values[-4:]) / 4
+            older_avg = sum(values[:-4]) / len(values[:-4]) if len(values[:-4]) > 0 else recent_avg
+
+            if recent_avg > older_avg * 1.3:
+                direction = "rising"
+            elif recent_avg < older_avg * 0.7:
+                direction = "declining"
+            else:
+                direction = "stable"
+        else:
+            direction = "stable"
+
+        return {
+            "avg_interest": int(avg),
+            "interest_peak": int(peak),
+            "current_interest": int(current),
+            "trend_direction": direction,
+            "interest_delta": ((current - avg) / avg * 100) if avg > 0 else 0
+        }
+
+    except Exception as e:
+        print(f"[Interest] Error fetching interest for '{keyword}': {e}")
+        return None
+
+
 def scrape_google_trends(custom_seeds: list[str] | None = None) -> list[str]:
     """
     Main entry point: scrape Google Trends.
@@ -91,3 +139,44 @@ def scrape_google_trends(custom_seeds: list[str] | None = None) -> list[str]:
     related = get_related_queries(batch)
     print(f"[Google Trends] Found {len(related)} unique keywords")
     return related
+
+
+def scrape_google_trends_enhanced(custom_seeds: list[str] | None = None) -> list[dict]:
+    """
+    Enhanced scraper that includes interest metrics.
+    Returns list of dicts: {keyword, avg_interest, trend_direction, source, ...}
+    """
+    seeds = custom_seeds or POD_SEED_KEYWORDS
+    batch = seeds[:6]
+
+    print(f"[Google Trends Enhanced] Scraping {len(batch)} seed keyword groups...")
+
+    related = get_related_queries(batch)
+
+    # Now get interest metrics for each keyword
+    enhanced_results = []
+    for keyword in related[:15]:  # Limit to prevent rate limiting
+        interest_data = get_interest_over_time(keyword)
+
+        result = {
+            "keyword": keyword,
+            "source": "google",
+        }
+
+        if interest_data:
+            result.update(interest_data)
+        else:
+            # Fallback values if interest data unavailable
+            result.update({
+                "avg_interest": None,
+                "interest_peak": None,
+                "current_interest": None,
+                "trend_direction": "stable",
+                "interest_delta": 0
+            })
+
+        enhanced_results.append(result)
+        time.sleep(random.uniform(1.5, 3.0))  # Be polite to Google
+
+    print(f"[Google Trends Enhanced] Enriched {len(enhanced_results)} keywords with interest data")
+    return enhanced_results
