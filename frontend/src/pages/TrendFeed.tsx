@@ -11,7 +11,11 @@ type FilterSource = 'all' | 'google' | 'tiktok' | 'pinterest' | 'redbubble' | 'e
 type FilterVelocity = 'all' | 'rising' | 'stable' | 'declining';
 type FilterUrgency = 'all' | 'urgent' | 'plan_ahead' | 'evergreen';
 
-export function TrendFeed() {
+interface Props {
+    onNavigate?: (page: 'explorer' | 'trends' | 'seo' | 'orders', payload?: string) => void;
+}
+
+export function TrendFeed({ onNavigate }: Props) {
     const [trends, setTrends] = useState<Trend[]>([]);
     const [loading, setLoading] = useState(true);
     const [scraping, setScraping] = useState(false);
@@ -58,7 +62,7 @@ export function TrendFeed() {
         setError(null);
 
         const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-        const eventSource = new EventSource(`${API_BASE}/trends/scrape`);
+        const eventSource = new EventSource(`${API_BASE} /trends/scrape`);
 
         eventSource.addEventListener('progress', (e) => {
             try {
@@ -145,7 +149,7 @@ export function TrendFeed() {
                     <div className={styles.progressBarBg}>
                         <div
                             className={styles.progressBarFill}
-                            style={{ width: `${scrapeProgress}%` }}
+                            style={{ width: `${scrapeProgress}% ` }}
                         />
                     </div>
                 </div>
@@ -165,7 +169,7 @@ export function TrendFeed() {
                     {(['all', 'google', 'tiktok', 'pinterest', 'redbubble', 'etsy'] as FilterSource[]).map((v) => (
                         <button
                             key={v}
-                            className={`${styles.pill} ${filterSource === v ? styles.active : ''}`}
+                            className={`${styles.pill} ${filterSource === v ? styles.active : ''} `}
                             onClick={() => setFilterSource(v)}
                         >
                             {v === 'all' ? 'All' : v}
@@ -178,7 +182,7 @@ export function TrendFeed() {
                     {(['all', '4+', '7+'] as FilterScore[]).map((v) => (
                         <button
                             key={v}
-                            className={`${styles.pill} ${filterScore === v ? styles.active : ''}`}
+                            className={`${styles.pill} ${filterScore === v ? styles.active : ''} `}
                             onClick={() => setFilterScore(v)}
                         >
                             {v}
@@ -191,7 +195,7 @@ export function TrendFeed() {
                     {(['all', 'safe'] as FilterIP[]).map((v) => (
                         <button
                             key={v}
-                            className={`${styles.pill} ${filterIP === v ? styles.active : ''}`}
+                            className={`${styles.pill} ${filterIP === v ? styles.active : ''} `}
                             onClick={() => setFilterIP(v)}
                         >
                             {v === 'all' ? 'All' : 'Safe'}
@@ -204,7 +208,7 @@ export function TrendFeed() {
                     {['all', 'low', 'medium', 'high'].map((v) => (
                         <button
                             key={v}
-                            className={`${styles.pill} ${filterComp === v ? styles.active : ''}`}
+                            className={`${styles.pill} ${filterComp === v ? styles.active : ''} `}
                             onClick={() => setFilterComp(v)}
                         >
                             {v}
@@ -217,7 +221,7 @@ export function TrendFeed() {
                     {(['all', 'rising', 'stable', 'declining'] as FilterVelocity[]).map((v) => (
                         <button
                             key={v}
-                            className={`${styles.pill} ${filterVelocity === v ? styles.active : ''}`}
+                            className={`${styles.pill} ${filterVelocity === v ? styles.active : ''} `}
                             onClick={() => setFilterVelocity(v)}
                         >
                             {v === 'rising' ? '🚀 Rising' : v === 'declining' ? '📉 Declining' : v === 'stable' ? '📊 Stable' : 'All'}
@@ -230,7 +234,7 @@ export function TrendFeed() {
                     {(['all', 'urgent', 'plan_ahead', 'evergreen'] as FilterUrgency[]).map((v) => (
                         <button
                             key={v}
-                            className={`${styles.pill} ${filterUrgency === v ? styles.active : ''}`}
+                            className={`${styles.pill} ${filterUrgency === v ? styles.active : ''} `}
                             onClick={() => setFilterUrgency(v)}
                         >
                             {v === 'urgent' ? '⚡ Urgent' : v === 'plan_ahead' ? '📅 Plan' : v === 'evergreen' ? '♻️ Evergreen' : 'All'}
@@ -243,10 +247,10 @@ export function TrendFeed() {
                     {[0, 30, 50, 70].map((v) => (
                         <button
                             key={v}
-                            className={`${styles.pill} ${filterMinInterest === v ? styles.active : ''}`}
+                            className={`${styles.pill} ${filterMinInterest === v ? styles.active : ''} `}
                             onClick={() => setFilterMinInterest(v)}
                         >
-                            {v === 0 ? 'All' : `${v}+`}
+                            {v === 0 ? 'All' : `${v} +`}
                         </button>
                     ))}
                 </div>
@@ -272,7 +276,13 @@ export function TrendFeed() {
             {!loading && filtered.length > 0 && (
                 <div className={styles.grid}>
                     {filtered.map((trend) => (
-                        <TrendCard key={trend.id} trend={trend} />
+                        <TrendCard
+                            key={trend.id}
+                            trend={trend}
+                            onGenerateDesign={() => {
+                                if (onNavigate) onNavigate('explorer', trend.keyword);
+                            }}
+                        />
                     ))}
                 </div>
             )}

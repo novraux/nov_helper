@@ -10,6 +10,7 @@ type Page = 'trends' | 'seo' | 'orders' | 'explorer';
 
 function App() {
   const [page, setPage] = useState<Page>('explorer');
+  const [explorerKeyword, setExplorerKeyword] = useState<string>('');
 
   return (
     <div className={styles.app}>
@@ -62,8 +63,11 @@ function App() {
 
       {/* Main */}
       <main className={styles.main}>
-        {page === 'explorer' && <NicheExplorer />}
-        {page === 'trends' && <TrendFeed />}
+        {page === 'explorer' && <NicheExplorer initialKeyword={explorerKeyword} />}
+        {page === 'trends' && <TrendFeed onNavigate={(newPage: Page, payload?: string) => {
+          setPage(newPage);
+          if (newPage === 'explorer' && payload) setExplorerKeyword(payload);
+        }} />}
         {page === 'seo' && <ShopifySEO />}
         {page === 'orders' && <Orders />}
       </main>

@@ -5,9 +5,10 @@ import styles from './TrendCard.module.css';
 
 interface Props {
     trend: Trend;
+    onGenerateDesign?: () => void;
 }
 
-export function TrendCard({ trend }: Props) {
+export function TrendCard({ trend, onGenerateDesign }: Props) {
     const [expanded, setExpanded] = React.useState(false);
 
     const sourceEmoji =
@@ -110,6 +111,33 @@ export function TrendCard({ trend }: Props) {
                     )}
                     {!trend.design_brief && trend.deep_analysis && (
                         <p className={styles.rawanalysis}>{trend.deep_analysis}</p>
+                    )}
+
+                    {onGenerateDesign && (
+                        <div style={{ marginTop: '16px' }}>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onGenerateDesign();
+                                }}
+                                style={{
+                                    width: '100%',
+                                    padding: '12px',
+                                    background: 'var(--accent-primary)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    fontSize: '1rem',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    gap: '8px'
+                                }}
+                            >
+                                🎨 Generate Custom AI Designs
+                            </button>
+                        </div>
                     )}
                 </div>
             )}

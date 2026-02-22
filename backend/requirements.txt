@@ -14,3 +14,4 @@ pydantic==2.6.3
 pydantic-settings==2.2.1
 tenacity==8.2.3
 beautifulsoup4==4.12.3
+sse_starlette==1.6.1
