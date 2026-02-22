@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { api } from '../api';
 import styles from './NicheExplorer.module.css';
 
@@ -358,9 +359,7 @@ export function NicheExplorer({ initialKeyword }: Props) {
                             <div className={styles.reportSection}>
                                 <h2 className={styles.sectionTitle}>📊 Market Analysis</h2>
                                 <div className={styles.reportContent}>
-                                    {result.market_gap_report.split('\n').map((line, i) => (
-                                        <p key={i}>{line}</p>
-                                    ))}
+                                    <ReactMarkdown>{result.market_gap_report}</ReactMarkdown>
                                 </div>
                             </div>
 
@@ -517,14 +516,14 @@ export function NicheExplorer({ initialKeyword }: Props) {
                             </div>
                         </section>
 
-                        {/* AI MOCKUP IMAGE GENERATION */}
+                        {/* RAW DESIGN GENERATION */}
                         <section className={styles.section}>
-                            <h3 className={styles.sectionTitle}>📸 Real-World Mockup Image</h3>
+                            <h3 className={styles.sectionTitle}>🖼️ Raw Design Graphic</h3>
 
                             {!mockupImage && !designDetailsLoading && (
                                 <div style={{ textAlign: 'center', padding: '20px', background: '#f3f4f6', borderRadius: '8px' }}>
                                     <p style={{ marginBottom: '16px', color: '#4b5563' }}>
-                                        Image generation costs money. Click the button below to explicitly generate a DALL-E 3 mockup in the <strong>{stylePref}</strong> style.
+                                        Image generation costs money. Click the button below to explicitly generate a raw, flat <strong>{stylePref}</strong> PNG graphic using DALL-E 3, suitable for Printful upload.
                                     </p>
                                     <button
                                         onClick={handleGenerateMockup}
@@ -539,19 +538,19 @@ export function NicheExplorer({ initialKeyword }: Props) {
                                             fontWeight: 'bold'
                                         }}
                                     >
-                                        📸 Generate 1 DALL-E Mockup Image
+                                        🖼️ Generate 1 Raw Design Graphic (DALL-E)
                                     </button>
                                 </div>
                             )}
 
                             {designDetailsLoading && !mockupImage && (
-                                <p style={{ textAlign: 'center', color: '#999', padding: '20px' }}>⏳ Generating your DALL-E 3 mockup image...</p>
+                                <p style={{ textAlign: 'center', color: '#999', padding: '20px' }}>⏳ Generating your DALL-E 3 raw design graphic...</p>
                             )}
 
                             {mockupImage && mockupImage.success && (
                                 <div style={{ textAlign: 'center', marginTop: '20px' }}>
-                                    <img src={mockupImage.image_url} alt="Generated Mockup" style={{ maxWidth: '100%', height: 'auto', borderRadius: '8px', border: '1px solid #eee' }} />
-                                    <p style={{ color: '#666', marginTop: '10px' }}>AI-generated mockup for "{selectedDesign.title}"</p>
+                                    <img src={mockupImage.image_url} alt="Generated Raw Design" style={{ maxWidth: '100%', height: 'auto', borderRadius: '8px', border: '1px solid #eee' }} />
+                                    <p style={{ color: '#666', marginTop: '10px' }}>AI-generated raw design graphic for "{selectedDesign.title}"</p>
                                 </div>
                             )}
                         </section>
